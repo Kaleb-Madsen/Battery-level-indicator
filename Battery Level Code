@@ -1,0 +1,46 @@
+#include <Arduino.h>
+#include <LiquidCrystal_I2C.h>
+
+// LCD setup — typical I2C address is 0x27, 16 columns, 2 rows
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// Analog pin for voltage divider
+const int analogPin = 34;
+
+// Resistor values used in the voltage divider
+const float R1 = 22000.0; // 22kΩ
+const float R2 = 10000.0;  // 10kΩ
+
+void setup() {
+  Serial.begin(9600);
+  lcd.init();            // Initialize the LCD
+  lcd.backlight();       // Turn on backlight
+}
+
+void loop() {
+  // Read analog value
+  int analogValue = analogRead(analogPin);
+
+  // Print the raw analog value to the Serial Monitor
+  Serial.print("Analog Value: ");
+  Serial.println(analogValue);  // Prints value between 0 and 4095
+
+  // Convert analog reading to voltage (ESP32 ADC range is 0-4095, 0–3.3V)
+  float vOut = (analogValue / 4095.0) * 3.3;
+
+  // Recalculate actual battery voltage using voltage divider formula
+  float batteryVoltage = vOut * (R1 + R2) / R2;
+
+  // Print calculated battery voltage to serial for debugging
+  Serial.print("Battery Voltage: ");
+  Serial.println(batteryVoltage);
+
+  // Display on LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Battery:");
+  lcd.setCursor(0, 1);
+  lcd.print(batteryVoltage, 2); // Print with 2 decimal places
+  lcd.print(" V");
+
+  delay(1000); // Update every second
+}
